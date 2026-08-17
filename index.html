@@ -3,50 +3,353 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Santai Hub</title>
+<title>Santai Hub — Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { color-scheme: light; }
-  * { box-sizing: border-box; }
-  body { margin: 0; padding: 32px 16px 64px; background: #f4f5f4; color: #1a1a1a;
-         font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
-  header { max-width: 960px; margin: 0 auto 24px; }
-  header h1 { font-size: 22px; margin: 0; }
-  .byline { margin: 4px 0 0; color: #5f6b66; font-size: 14px; }
-  .slide { position: relative; max-width: 960px; margin: 0 auto 24px; aspect-ratio: 16 / 9;
-           background: #ffffff; border: 1px solid #e4e7e5; border-radius: 12px;
-           padding: 48px 56px; overflow: hidden; display: flex; flex-direction: column; }
-  .slide.title { justify-content: center; }
-  .num { position: absolute; right: 16px; bottom: 12px; font-size: 12px; color: #5f6b66; }
-  h2 { font-size: 28px; margin: 0 0 20px; }
-  h2.big { font-size: 44px; margin-bottom: 12px; }
-  h2.big::after { content: ""; display: block; width: 72px; height: 4px;
-                  background: #059669; margin-top: 20px; border-radius: 2px; }
-  .body { flex: 1; min-height: 0; overflow: hidden; }
-  .body > * { margin: 0 0 12px; }
-  ul { padding-left: 22px; }
-  li { margin-bottom: 8px; }
-  li.lvl1 { margin-left: 20px; color: #5f6b66; font-size: 15px; list-style: circle; }
-  img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  pre { background: #f4f5f4; padding: 12px 14px; border-radius: 8px; overflow: auto;
-        font-size: 13px; }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; }
-  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #e4e7e5; }
-  td { color: #5f6b66; }
-  .notes { margin-top: auto; padding-top: 12px; border-top: 1px dashed #e4e7e5;
-           color: #5f6b66; font-size: 12px; font-style: italic; }
+  :root{
+    --bg:#0d1512; --panel:#10201b; --panel-2:#0b1a15;
+    --fg:#eef4f1; --muted:#9fb3ab; --faint:#728178;
+    --accent:#34d399; --accent-2:#10b981; --accent-deep:#059669;
+    --rule:rgba(255,255,255,.08); --card:#0f1d18;
+    --shadow:0 30px 80px -30px rgba(0,0,0,.75);
+    --maxw:1040px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(52,211,153,.14), transparent 60%),
+      radial-gradient(1000px 600px at 110% 120%, rgba(16,185,129,.12), transparent 55%),
+      var(--bg);
+    color:var(--fg);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+
+  /* Stage */
+  .stage{position:fixed;inset:0;display:grid;place-items:center;padding:clamp(16px,4vw,56px)}
+  .deck{width:100%;max-width:var(--maxw);aspect-ratio:16/9;position:relative}
+
+  .slide{
+    position:absolute;inset:0;
+    background:linear-gradient(160deg,var(--card),var(--panel-2));
+    border:1px solid var(--rule);
+    border-radius:22px;
+    box-shadow:var(--shadow);
+    padding:clamp(28px,4.6vw,64px);
+    display:flex;flex-direction:column;
+    opacity:0;transform:translateY(14px) scale(.985);
+    pointer-events:none;
+    transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.2,1);
+    overflow:hidden;
+  }
+  .slide::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+    background:linear-gradient(var(--accent),var(--accent-deep));
+    opacity:.9;
+  }
+  .slide.active{opacity:1;transform:none;pointer-events:auto}
+  .slide.prev{transform:translateY(-14px) scale(.985)}
+
+  .kicker{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:clamp(11px,1.1vw,13px);font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:auto;
+  }
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(52,211,153,.16)}
+
+  .heading{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;line-height:1.04;
+    letter-spacing:-.01em;font-size:clamp(26px,4.3vw,52px);
+    margin:18px 0 6px;
+  }
+  .lead{color:var(--muted);font-size:clamp(15px,1.7vw,21px);line-height:1.5;max-width:70ch}
+
+  .content{margin-top:22px;display:flex;flex-direction:column;gap:clamp(10px,1.5vw,16px);overflow:auto}
+  .content::-webkit-scrollbar{width:8px}
+  .content::-webkit-scrollbar-thumb{background:var(--rule);border-radius:8px}
+
+  ul.points{list-style:none;display:flex;flex-direction:column;gap:clamp(9px,1.4vw,14px)}
+  ul.points li{
+    position:relative;padding-left:30px;
+    font-size:clamp(14px,1.55vw,19px);line-height:1.5;color:var(--fg);
+  }
+  ul.points li::before{
+    content:"";position:absolute;left:2px;top:.62em;width:9px;height:9px;border-radius:3px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-deep));
+    box-shadow:0 0 0 4px rgba(52,211,153,.10);
+  }
+  ul.points li b, ul.points li strong{color:#fff;font-weight:700}
+  ul.points li .sub{display:block;color:var(--muted);font-weight:400;margin-top:2px}
+
+  /* Card grids for richer slides */
+  .grid{display:grid;gap:clamp(12px,1.6vw,18px);margin-top:6px}
+  .grid.two{grid-template-columns:1fr 1fr}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  .tile{
+    background:linear-gradient(160deg,rgba(255,255,255,.035),rgba(255,255,255,.01));
+    border:1px solid var(--rule);border-radius:16px;padding:clamp(16px,1.9vw,22px);
+  }
+  .tile .t-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .tile .t-num{
+    font-family:"Fraunces",serif;font-size:15px;font-weight:600;color:#04150f;
+    width:28px;height:28px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-deep));flex:none;
+  }
+  .tile h3{font-size:clamp(15px,1.5vw,18px);font-weight:700;letter-spacing:-.01em}
+  .tile p{color:var(--muted);font-size:clamp(13px,1.35vw,15.5px);line-height:1.5}
+
+  /* Title slide */
+  .slide.cover{justify-content:center;text-align:left}
+  .slide.cover::after{
+    content:"";position:absolute;right:-120px;top:-120px;width:420px;height:420px;border-radius:50%;
+    background:radial-gradient(circle at center,rgba(52,211,153,.22),transparent 60%);filter:blur(6px);
+  }
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+  .brand .mark{
+    width:38px;height:38px;border-radius:11px;flex:none;
+    background:linear-gradient(135deg,var(--accent),var(--accent-deep));
+    display:grid;place-items:center;color:#04150f;font-family:"Fraunces",serif;font-weight:600;font-size:20px;
+    box-shadow:0 8px 24px -6px rgba(16,185,129,.6);
+  }
+  .brand .name{font-weight:700;letter-spacing:.02em;font-size:18px}
+  .slide.cover .heading{font-size:clamp(34px,6vw,72px);margin:8px 0 20px}
+  .slide.cover .lead{font-size:clamp(16px,2vw,24px);max-width:44ch}
+  .cover-meta{margin-top:34px;display:flex;align-items:center;gap:14px;color:var(--faint);font-size:14px}
+  .cover-meta .pill{color:var(--accent);border:1px solid rgba(52,211,153,.4);padding:5px 12px;border-radius:999px;font-weight:600;font-size:12.5px;letter-spacing:.03em}
+
+  /* Closing slide */
+  .slide.closing{justify-content:center;text-align:center;align-items:center}
+  .slide.closing::before{display:none}
+  .slide.closing .heading{max-width:20ch}
+  .cta{
+    margin-top:26px;display:inline-flex;align-items:center;gap:10px;
+    font-weight:700;font-size:clamp(16px,1.9vw,22px);color:#04150f;
+    background:linear-gradient(135deg,var(--accent),var(--accent-deep));
+    padding:14px 26px;border-radius:14px;box-shadow:0 14px 34px -12px rgba(16,185,129,.7);
+  }
+
+  .note{margin-top:14px;font-size:12.5px;color:var(--faint);font-style:italic;border-top:1px dashed var(--rule);padding-top:10px}
+
+  /* Chrome: progress + controls */
+  .progress{position:fixed;left:0;top:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0;transition:width .45s cubic-bezier(.2,.7,.2,1);z-index:10;box-shadow:0 0 12px rgba(52,211,153,.6)}
+  .hud{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
+    background:rgba(9,18,15,.7);backdrop-filter:blur(10px);border:1px solid var(--rule);
+    padding:8px 10px;border-radius:14px;z-index:10;user-select:none}
+  .hud button{
+    width:34px;height:34px;border-radius:9px;border:1px solid var(--rule);background:transparent;color:var(--fg);
+    font-size:16px;cursor:pointer;display:grid;place-items:center;transition:background .2s,border-color .2s}
+  .hud button:hover{background:rgba(255,255,255,.06);border-color:rgba(52,211,153,.5)}
+  .hud button:disabled{opacity:.35;cursor:default}
+  .counter{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);min-width:52px;text-align:center;font-weight:600}
+  .hud .hint{font-size:11px;color:var(--faint);padding-right:4px}
+
+  @media (max-width:640px){
+    .grid.two,.grid.three{grid-template-columns:1fr}
+    .hud .hint{display:none}
+    .slide{border-radius:18px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .slide{transition:opacity .001s}
+    .progress{transition:none}
+  }
 </style>
 </head>
 <body>
-<header><h1>Santai Hub</h1><p class="byline">Sunny Lee</p></header>
-<section class="slide title"><span class="num">1</span><h2 class="big">Santai Hub</h2><div class="body"><p>A home for student projects and know-how — with an AI teammate that can actually build.</p></div></section>
-<section class="slide bullets"><span class="num">2</span><h2 class="">What is Santai?</h2><div class="body"><p>Santai Hub is where students publish projects, notes, and class or club knowledge — so the next person doesn&#39;t start from zero.</p><ul><li class="lvl0">Publish projects, notes, and shared know-how to a public, searchable home</li><li class="lvl0">Open any project and build on it by chatting with an AI agent</li><li class="lvl0">No dev environment, no setup — coder or not</li></ul></div><aside class="notes">Lead with the core promise — reuse campus knowledge, and let anyone build on it.</aside></section>
-<section class="slide bullets"><span class="num">3</span><h2 class="">Who It&#39;s For</h2><div class="body"><p>Built so a CS senior and a first-year who&#39;s never opened a terminal get real value from the same base.</p><ul><li class="lvl0">**If you code** — Skip the boring part. Fork a working project instead of scaffolding from scratch; the agent handles setup, edits, and test runs while you review and steer.</li><li class="lvl0">**If you don&#39;t** — Describe it, watch it happen. Say what you want in plain English; a live preview shows the result as the agent builds it.</li></ul></div></section>
-<section class="slide bullets"><span class="num">4</span><h2 class="">The Problem</h2><div class="body"><p>Every semester, campus knowledge starts over at zero.</p><ul><li class="lvl0">A club&#39;s onboarding doc, a reusable class project, a hackathon build with real potential</li><li class="lvl0">Most of it lives on one laptop or in a group chat that scrolls away when the team graduates</li><li class="lvl0">Building on someone else&#39;s project usually means knowing how to code well enough to set it up — which shuts out most students before they see if the idea is good</li></ul></div></section>
-<section class="slide bullets"><span class="num">5</span><h2 class="">The Product</h2><div class="body"><p>A public, searchable home for what students build — plus a way to build on it without needing to code.</p><ul><li class="lvl0">**Publish** — Projects and notes get a public page: tagged, categorized, searchable, ready to reuse</li><li class="lvl0">**Collaborate** — Groups mirror how campus teams already work — a class, a club, a hackathon squad — with shared access and one-click import of Docs, Slides, and PDFs</li><li class="lvl0">**Build** — Open any project in a live chat with an AI agent that reads it, edits it, runs it, and shows a live preview</li></ul></div></section>
-<section class="slide bullets"><span class="num">6</span><h2 class="">How It Works</h2><div class="body"><p>Four steps, and none of them require knowing how to code.</p><ul><li class="lvl0">**1. Find something worth building on** — Search projects and notes shared by other students, clubs, or teams</li><li class="lvl0">**2. Open it — nothing to install** — It spins up ready to run, in your browser, in its own private sandbox</li><li class="lvl0">**3. Tell the agent what you want** — Chat like you would with a teammate; watch a live preview update as it writes and runs changes</li><li class="lvl0">**4. Publish or hand it in** — Save your version back so the next person can pick up where you left off</li></ul></div></section>
-<section class="slide bullets"><span class="num">7</span><h2 class="">Why Now</h2><div class="body"><p>AI agents made it possible to build software by describing what you want, not by knowing how to code it.</p><ul><li class="lvl0">A business or design student can now ship a real class project — not just a CS major</li><li class="lvl0">Students are the fastest adopters of new AI tools</li><li class="lvl0">A class project, club, or hackathon is a low-stakes place to build something you couldn&#39;t before</li></ul></div><aside class="notes">Campus is the wedge — fastest adopters, lowest stakes to experiment.</aside></section>
-<section class="slide bullets"><span class="num">8</span><h2 class="">Business Model</h2><div class="body"><p>Free to browse and publish; pay only for the AI&#39;s building time.</p><ul><li class="lvl0">Every chat session runs on real model calls, so billing is metered — not a seat license</li><li class="lvl0">A credits ledger charges each session for what it actually uses, priced off live model-gateway rates so margin holds as models change</li><li class="lvl0">Student-first pricing: credit packs feel like a streaming subscription, not an enterprise seat — and the same metering carries cleanly to teams and companies</li></ul></div></section>
-<section class="slide bullets"><span class="num">9</span><h2 class="">Under the Hood</h2><div class="body"><p>Early-stage, but already a working platform — not a mockup.</p><ul><li class="lvl0">**App** — Web app at hub.sant.ai with sign-in, public profiles, and search/filter across projects and notes</li><li class="lvl0">**Agent** — Each session runs in its own private sandbox with a real AI coding agent inside</li><li class="lvl0">**Import** — Google Docs, Sheets, Slides, PDFs, and Markdown pull straight into a knowledge base</li><li class="lvl0">**Billing** — Stripe-backed credits, live usage pricing, admin override tooling</li><li class="lvl0">**Publishing** — GitHub-backed version history and a built-in deploy pipeline</li></ul></div></section>
-<section class="slide content"><span class="num">10</span><h2 class="">Start building on what campus already knows</h2><div class="body"><p>Santai Hub — a public home for student work, with an AI teammate that builds.</p><p>**hub.sant.ai**</p></div></section>
+<div class="progress" id="progress"></div>
+
+<div class="stage">
+  <div class="deck" id="deck">
+
+    <!-- 1 · Cover -->
+    <section class="slide cover">
+      <div class="brand"><span class="mark">S</span><span class="name">Santai&nbsp;Hub</span></div>
+      <h1 class="heading">A home for student projects — with an AI teammate that&nbsp;builds.</h1>
+      <p class="lead">Publish what you make. Open anyone's project and build on it by chatting with an AI agent — no setup required.</p>
+      <div class="cover-meta"><span class="pill">One-Pager</span><span>Sunny Lee · hub.sant.ai</span></div>
+    </section>
+
+    <!-- 2 · What is Santai -->
+    <section class="slide">
+      <span class="kicker"><span class="dot"></span>What is Santai?</span>
+      <h2 class="heading">Campus knowledge that doesn't start over at zero</h2>
+      <p class="lead">Where students publish projects, notes, and class or club know-how — so the next person doesn't start from scratch.</p>
+      <div class="content">
+        <ul class="points">
+          <li>Publish projects and notes to a <b>public, searchable</b> home</li>
+          <li>Open any project and build on it by <b>chatting with an AI agent</b></li>
+          <li>No dev environment, no terminal — <b>coder or not</b></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 3 · Who it's for -->
+    <section class="slide">
+      <span class="kicker"><span class="dot"></span>Who It's For</span>
+      <h2 class="heading">Same base, real value for everyone</h2>
+      <p class="lead">Built so a CS senior and a first-year who's never opened a terminal both get something out of it.</p>
+      <div class="content">
+        <div class="grid two">
+          <div class="tile">
+            <div class="t-h"><h3>If you code</h3></div>
+            <p><b style="color:#fff">Skip the boring part.</b> Fork a working project instead of scaffolding one. The agent handles setup, edits, and test runs — you review and steer.</p>
+          </div>
+          <div class="tile">
+            <div class="t-h"><h3>If you don't</h3></div>
+            <p><b style="color:#fff">Describe it, watch it happen.</b> Say what you want in plain English. No install, no CS degree — a live preview shows the result as it's built.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · Problem -->
+    <section class="slide">
+      <span class="kicker"><span class="dot"></span>The Problem</span>
+      <h2 class="heading">Every semester, campus knowledge resets</h2>
+      <div class="content">
+        <ul class="points">
+          <li>Onboarding docs, reusable class projects, hackathon builds with real potential…</li>
+          <li>…live on <b>one laptop</b> or a <b>group chat</b> that scrolls away when the team graduates</li>
+          <li>Building on someone's project usually means knowing how to <b>code well enough to set it up</b> — shutting out most students before they see if the idea is good</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 5 · Product -->
+    <section class="slide">
+      <span class="kicker"><span class="dot"></span>The Product</span>
+      <h2 class="heading">A public home — and a way to build on it</h2>
+      <div class="content">
+        <div class="grid three">
+          <div class="tile">
+            <div class="t-h"><h3>Publish</h3></div>
+            <p>Projects and notes get a public page — tagged, categorized, searchable, ready to reuse.</p>
+          </div>
+          <div class="tile">
+            <div class="t-h"><h3>Collaborate</h3></div>
+            <p>Groups mirror campus teams — class, club, hackathon squad — with shared access and one-click import of Docs, Slides & PDFs.</p>
+          </div>
+          <div class="tile">
+            <div class="t-h"><h3>Build</h3></div>
+            <p>Open any project in a live chat with an agent that reads, edits, runs it, and shows a live preview.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · How it works -->
+    <section class="slide">
+      <span class="kicker"><span class="dot"></span>How It Works</span>
+      <h2 class="heading">Four steps, none require code</h2>
+      <div class="content">
+        <div class="grid two">
+          <div class="tile"><div class="t-h"><span class="t-num">1</span><h3>Find</h3></div><p>Search projects and notes shared by other students, clubs, or teams.</p></div>
+          <div class="tile"><div class="t-h"><span class="t-num">2</span><h3>Open — nothing to install</h3></div><p>It spins up ready to run, in your browser, in its own private sandbox.</p></div>
+          <div class="tile"><div class="t-h"><span class="t-num">3</span><h3>Tell the agent</h3></div><p>Chat like a teammate; watch a live preview update as it writes and runs changes.</p></div>
+          <div class="tile"><div class="t-h"><span class="t-num">4</span><h3>Publish or hand it in</h3></div><p>Save your version back so the next person picks up where you left off.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · Why now -->
+    <section class="slide">
+      <span class="kicker"><span class="dot"></span>Why Now</span>
+      <h2 class="heading">Build by describing — not by knowing how to code</h2>
+      <p class="lead">AI agents changed what a non-CS student can ship. Campus is the right place to start.</p>
+      <div class="content">
+        <ul class="points">
+          <li>A <b>business or design student</b> can now ship a real class project — not just a CS major</li>
+          <li>Students are the <b>fastest adopters</b> of new AI tools</li>
+          <li>A class project, club, or hackathon is a <b>low-stakes</b> place to try building something you couldn't before</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 8 · Business model -->
+    <section class="slide">
+      <span class="kicker"><span class="dot"></span>Business Model</span>
+      <h2 class="heading">Free to browse &amp; publish; pay for building time</h2>
+      <div class="content">
+        <ul class="points">
+          <li>Every chat session runs on <b>real model calls</b> — billing is metered, not a seat license</li>
+          <li>A <b>credits ledger</b> charges each session for what it uses, priced off live gateway rates so margin holds as models change</li>
+          <li>Student-first: credit packs feel like a <b>streaming subscription</b> — and the same metering carries cleanly to teams &amp; companies</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 9 · Under the hood -->
+    <section class="slide">
+      <span class="kicker"><span class="dot"></span>Under the Hood</span>
+      <h2 class="heading">Already a working platform — not a mockup</h2>
+      <div class="content">
+        <ul class="points">
+          <li><b>App</b> — hub.sant.ai: sign-in, public profiles, search &amp; filter across projects and notes</li>
+          <li><b>Agent</b> — each session runs in its own private sandbox with a real AI coding agent inside</li>
+          <li><b>Import</b> — Google Docs, Sheets, Slides, PDFs &amp; Markdown pull straight into a knowledge base</li>
+          <li><b>Billing</b> — Stripe-backed credits, live usage pricing, admin override tooling</li>
+          <li><b>Publishing</b> — GitHub-backed version history and a built-in deploy pipeline</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 10 · Closing -->
+    <section class="slide closing">
+      <span class="kicker" style="justify-content:center"><span class="dot"></span>Santai Hub</span>
+      <h2 class="heading">Start building on what campus already knows</h2>
+      <p class="lead">A public home for student work, with an AI teammate that builds.</p>
+      <span class="cta">hub.sant.ai →</span>
+    </section>
+
+  </div>
+</div>
+
+<div class="hud">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <span class="counter" id="counter">1 / 10</span>
+  <button id="next" aria-label="Next slide">›</button>
+  <span class="hint">← → · space</span>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const total=slides.length;
+  let i=0;
+  const counter=document.getElementById('counter');
+  const progress=document.getElementById('progress');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+
+  function show(n){
+    i=Math.max(0,Math.min(total-1,n));
+    slides.forEach((s,idx)=>{
+      s.classList.toggle('active',idx===i);
+      s.classList.toggle('prev',idx<i);
+    });
+    counter.textContent=(i+1)+' / '+total;
+    progress.style.width=(i/(total-1)*100)+'%';
+    prevBtn.disabled=i===0;
+    nextBtn.disabled=i===total-1;
+  }
+  const next=()=>show(i+1), prev=()=>show(i-1);
+
+  nextBtn.onclick=next; prevBtn.onclick=prev;
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home')show(0);
+    else if(e.key==='End')show(total-1);
+  });
+  document.querySelector('.stage').addEventListener('click',e=>{ if(!e.target.closest('.hud')) next(); });
+  let x0=null;
+  addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{ if(x0===null)return; const dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>50){dx<0?next():prev();} x0=null;});
+
+  show(0);
+</script>
 </body>
 </html>
